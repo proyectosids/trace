@@ -2,7 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 
 const ensureUploadDirectories = async () => {
-    const baseDir = path.join(process.cwd(), 'uploads', 'evidence');
+    const baseDir = path.join(process.cwd(), process.env.UPLOAD_DIR, 'evidence');
 
     try {
         await fs.mkdir(baseDir, { recursive: true });
