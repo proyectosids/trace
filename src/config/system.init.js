@@ -9,7 +9,7 @@ async function initializeSystem() {
     // 1️⃣ Obtener todos los CECyT
     const cecytsResult = await pool.request().query(`
     SELECT Id, Code
-    FROM Cecyts
+    FROM trace.Cecyts
   `);
 
     const cecyts = cecytsResult.recordset;
@@ -26,7 +26,7 @@ async function initializeSystem() {
         const existing = await pool.request()
             .input('email', sql.NVarChar, email)
             .query(`
-        SELECT Id FROM Users WHERE Email = @email
+        SELECT Id FROM trace.Users WHERE Email = @email
       `);
 
         if (existing.recordset.length > 0) {
@@ -37,7 +37,7 @@ async function initializeSystem() {
         console.log(`⚙️ Creando admin para ${cecyt.Code}...`);
 
         const passwordHash = await bcrypt.hash(
-            process.env.ADMIN_PASSWORD || 'Admin123!',
+            process.env.ADMIN_PASSWORD || 'Admin1234',
             10
         );
 
@@ -48,7 +48,7 @@ async function initializeSystem() {
             .input('PasswordHash', sql.NVarChar, passwordHash)
             .input('FullName', sql.NVarChar, `Administrador ${cecyt.Code}`)
             .query(`
-        INSERT INTO Users (Id, CecytId, Email, PasswordHash, FullName, IsActive)
+        INSERT INTO trace.Users (Id, CecytId, Email, PasswordHash, FullName, IsActive)
         OUTPUT INSERTED.Id
         VALUES (NEWID(), @CecytId, @Email, @PasswordHash, @FullName, 1)
       `);
@@ -59,9 +59,9 @@ async function initializeSystem() {
         await pool.request()
             .input('UserId', sql.UniqueIdentifier, userId)
             .query(`
-        INSERT INTO UserRoles (UserId, RoleId)
+        INSERT INTO trace.UserRoles (UserId, RoleId)
         SELECT @UserId, Id
-        FROM Roles
+        FROM trace.Roles
         WHERE Name = 'ADMIN'
       `);
 

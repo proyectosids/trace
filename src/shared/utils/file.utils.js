@@ -1,13 +1,3 @@
-// const fs = require('fs');
-
-// function deleteFileIfExists(filePath) {
-//     if (fs.existsSync(filePath)) {
-//         fs.unlinkSync(filePath);
-//     }
-// }
-
-// module.exports = { deleteFileIfExists };
-
 const fs = require('fs');
 
 function deleteFileIfExists(filePath) {

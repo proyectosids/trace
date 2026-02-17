@@ -6,10 +6,10 @@ const { poolPromise, sql } = require('./config/db');
   const pool = await poolPromise;
 
   await pool.request().query(`
-    INSERT INTO Users (Id, CecytId, Email, PasswordHash, FullName, IsActive)
+    INSERT INTO trace.Users (Id, CecytId, Email, PasswordHash, FullName, IsActive)
     VALUES (
       NEWID(),
-      (SELECT TOP 1 Id FROM Cecyts),
+      (SELECT TOP 1 Id FROM trace.Cecyts),
       'admin@sistema.com',
       '${passwordHash}',
       'Administrador del Sistema',

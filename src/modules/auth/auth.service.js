@@ -11,10 +11,10 @@ async function login(email, password) {
         .query(`
             SELECT u.Id, u.CecytId, u.PasswordHash, u.IsActive,
                    STRING_AGG(p.Code, ',') AS Permissions
-            FROM Users u
-            JOIN UserRoles ur ON u.Id = ur.UserId
-            JOIN RolePermissions rp ON ur.RoleId = rp.RoleId
-            JOIN Permissions p ON rp.PermissionId = p.Id
+            FROM trace.Users u
+            JOIN trace.UserRoles ur ON u.Id = ur.UserId
+            JOIN trace.RolePermissions rp ON ur.RoleId = rp.RoleId
+            JOIN trace.Permissions p ON rp.PermissionId = p.Id
             WHERE u.Email = @email
             GROUP BY u.Id, u.CecytId, u.PasswordHash, u.IsActive
         `);
@@ -34,7 +34,7 @@ async function login(email, password) {
         .input('CecytId', sql.UniqueIdentifier, user.CecytId)
         .query(`
             SELECT StateId
-            FROM Cecyts
+            FROM trace.Cecyts
             WHERE Id = @CecytId
         `);
 
@@ -46,7 +46,7 @@ async function login(email, password) {
         .input('StateId', sql.UniqueIdentifier, cecyt.StateId)
         .query(`
             SELECT TOP 1 Id, Name
-            FROM Semesters
+            FROM trace.Semesters
             WHERE StateId = @StateId
               AND IsActive = 1
             ORDER BY StartDate DESC
@@ -79,7 +79,7 @@ async function register({ email, password, fullName, cecytId }) {
     // 1️⃣ Verificar si ya existe email
     const existing = await pool.request()
         .input('email', sql.NVarChar, email)
-        .query(`SELECT Id FROM Users WHERE Email = @email`);
+        .query(`SELECT Id FROM trace.Users WHERE Email = @email`);
 
     if (existing.recordset.length > 0) {
         throw new Error('El correo ya está registrado');
@@ -88,7 +88,7 @@ async function register({ email, password, fullName, cecytId }) {
     // 2️⃣ Verificar que exista el CECyT
     const cecyt = await pool.request()
         .input('Id', sql.UniqueIdentifier, cecytId)
-        .query(`SELECT Id FROM Cecyts WHERE Id = @Id`);
+        .query(`SELECT Id FROM trace.Cecyts WHERE Id = @Id`);
 
     if (!cecyt.recordset[0]) {
         throw new Error('CECyT inválido');
@@ -104,20 +104,21 @@ async function register({ email, password, fullName, cecytId }) {
         .input('PasswordHash', sql.NVarChar, passwordHash)
         .input('FullName', sql.NVarChar, fullName)
         .query(`
-      INSERT INTO Users (Id, CecytId, Email, PasswordHash, FullName, IsActive)
+      INSERT INTO trace.Users (Id, CecytId, Email, PasswordHash, FullName, IsActive)
       OUTPUT INSERTED.Id
       VALUES (NEWID(), @CecytId, @Email, @PasswordHash, @FullName, 0)
     `);
 
     const userId = userInsert.recordset[0].Id;
+    console.log(userId);
 
     // 5️⃣ Asignar rol DOCENTE automáticamente
     await pool.request()
         .input('UserId', sql.UniqueIdentifier, userId)
         .query(`
-      INSERT INTO UserRoles (UserId, RoleId)
+      INSERT INTO trace.UserRoles (UserId, RoleId)
       SELECT @UserId, Id
-      FROM Roles
+      FROM trace.Roles
       WHERE Name = 'DOCENTE'
     `);
 }

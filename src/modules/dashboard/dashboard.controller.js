@@ -21,7 +21,7 @@ async function cecytDashboard(req, res) {
         CASE WHEN SocioemocionalRegistradas >= 1 THEN 1 ELSE 0 END AS SocioemocionalCumplida,
         SocioemocionalRegistradas,
         TrayectoriaRegistrada
-      FROM VW_TeacherSemesterCompliance
+      FROM trace.VW_TeacherSemesterCompliance
       ${where}
       ORDER BY TeacherUserId
     `);

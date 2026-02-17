@@ -32,7 +32,7 @@ async function register(req, res) {
         });
 
         return res.status(201).json({
-            message: 'Usuario registrado. Espera aprobación del director.'
+            message: 'Usuario registrado. Espera aprobación del adminsitrador/director.'
         });
 
     } catch (err) {

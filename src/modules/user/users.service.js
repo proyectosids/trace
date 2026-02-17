@@ -7,7 +7,7 @@ async function getPendingUsers(currentUser) {
         .input('CecytId', sql.UniqueIdentifier, currentUser.cecytId)
         .query(`
       SELECT Id, Email, FullName, CreatedAt
-      FROM Users
+      FROM trace.Users
       WHERE CecytId = @CecytId
         AND IsActive = 0
       ORDER BY CreatedAt DESC
@@ -24,7 +24,7 @@ async function approveUser(userId, currentUser) {
         .input('Id', sql.UniqueIdentifier, userId)
         .query(`
       SELECT Id, CecytId
-      FROM Users
+      FROM trace.Users
       WHERE Id = @Id
     `);
 
@@ -38,7 +38,7 @@ async function approveUser(userId, currentUser) {
     await pool.request()
         .input('Id', sql.UniqueIdentifier, userId)
         .query(`
-      UPDATE Users
+      UPDATE trace.Users
       SET IsActive = 1
       WHERE Id = @Id
     `);
@@ -56,7 +56,7 @@ async function assignRole(userId, roleName, currentUser) {
         .input('Id', sql.UniqueIdentifier, userId)
         .query(`
       SELECT Id, CecytId
-      FROM Users
+      FROM trace.Users
       WHERE Id = @Id
     `);
 
@@ -71,7 +71,7 @@ async function assignRole(userId, roleName, currentUser) {
     const roleResult = await pool.request()
         .input('Name', sql.NVarChar, roleName)
         .query(`
-      SELECT Id FROM Roles WHERE Name = @Name
+      SELECT Id FROM trace.Roles WHERE Name = @Name
     `);
 
     const role = roleResult.recordset[0];
@@ -80,14 +80,14 @@ async function assignRole(userId, roleName, currentUser) {
     // Limpiar roles actuales
     await pool.request()
         .input('UserId', sql.UniqueIdentifier, userId)
-        .query(`DELETE FROM UserRoles WHERE UserId = @UserId`);
+        .query(`DELETE FROM trace.UserRoles WHERE UserId = @UserId`);
 
     // Insertar nuevo rol
     await pool.request()
         .input('UserId', sql.UniqueIdentifier, userId)
         .input('RoleId', sql.UniqueIdentifier, role.Id)
         .query(`
-      INSERT INTO UserRoles (UserId, RoleId)
+      INSERT INTO trace.UserRoles (UserId, RoleId)
       VALUES (@UserId, @RoleId)
     `);
 }

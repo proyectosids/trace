@@ -5,7 +5,7 @@ async function getSemesterById(semesterId) {
     const pool = await poolPromise;
     const r = await pool.request()
         .input('id', sql.UniqueIdentifier, semesterId)
-        .query(`SELECT Id, StateId, StartDate, EndDate, IsActive FROM Semesters WHERE Id = @id`);
+        .query(`SELECT Id, StateId, StartDate, EndDate, IsActive FROM trace.Semesters WHERE Id = @id`);
     return r.recordset[0] || null;
 }
 
@@ -15,7 +15,7 @@ async function getActivityById(activityId) {
         .input('id', sql.UniqueIdentifier, activityId)
         .query(`
       SELECT Id, CecytId, SemesterId, TeacherUserId, Type, Title, ScheduledDate, Status
-      FROM Activities
+      FROM trace.Activities
       WHERE Id = @id
     `);
     return r.recordset[0] || null;
@@ -25,7 +25,7 @@ async function countEvidence(activityId) {
     const pool = await poolPromise;
     const r = await pool.request()
         .input('ActivityId', sql.UniqueIdentifier, activityId)
-        .query(`SELECT COUNT(1) AS Cnt FROM ActivityEvidence WHERE ActivityId = @ActivityId`);
+        .query(`SELECT COUNT(1) AS Cnt FROM trace.ActivityEvidence WHERE ActivityId = @ActivityId`);
     return Number(r.recordset?.[0]?.Cnt ?? 0);
 }
 
@@ -55,7 +55,7 @@ async function createActivity(data, user) {
             .input('SemesterId', sql.UniqueIdentifier, semesterId)
             .query(`
                 SELECT COUNT(1) AS Cnt
-                FROM Activities
+                FROM trace.Activities
                 WHERE TeacherUserId = @TeacherUserId
                   AND SemesterId = @SemesterId
                   AND Type = 'TRAYECTORIA'
@@ -79,7 +79,7 @@ async function createActivity(data, user) {
         .input('Title', sql.NVarChar, title)
         .input('ScheduledDate', sql.Date, scheduledDate)
         .query(`
-            INSERT INTO Activities 
+            INSERT INTO trace.Activities 
             (CecytId, SemesterId, TeacherUserId, Type, Title, ScheduledDate)
             VALUES 
             (@CecytId, @SemesterId, @TeacherUserId, @Type, @Title, @ScheduledDate)
@@ -108,7 +108,7 @@ async function listActivities(filters, user) {
 
     const r = await req.query(`
     SELECT Id, SemesterId, Type, Title, ScheduledDate, Status, CreatedAt, UpdatedAt
-    FROM Activities
+    FROM trace.Activities
     ${where}
     ORDER BY ScheduledDate DESC, CreatedAt DESC
   `);
@@ -149,7 +149,7 @@ async function registerActivity(activityId, user) {
     await pool.request()
         .input('Id', sql.UniqueIdentifier, activityId)
         .query(`
-      UPDATE Activities
+      UPDATE trace.Activities
       SET Status = 'REGISTRADA', UpdatedAt = SYSDATETIME()
       WHERE Id = @Id
     `);
@@ -178,7 +178,7 @@ async function updateActivityTitle(activityId, newTitle, user) {
         .input('Id', sql.UniqueIdentifier, activityId)
         .input('Title', sql.NVarChar, newTitle)
         .query(`
-            UPDATE Activities
+            UPDATE trace.Activities
             SET Title = @Title,
                 UpdatedAt = SYSDATETIME()
             WHERE Id = @Id
@@ -219,7 +219,7 @@ async function cancelActivity(activityId, user) {
     await pool.request()
         .input('Id', sql.UniqueIdentifier, activityId)
         .query(`
-            UPDATE Activities
+            UPDATE trace.Activities
             SET Status = 'CANCELADA',
                 UpdatedAt = SYSDATETIME()
             WHERE Id = @Id
@@ -259,7 +259,7 @@ async function reprogramActivity(activityId, newDate, user) {
         .input('Id', sql.UniqueIdentifier, activityId)
         .input('NewDate', sql.Date, newDate)
         .query(`
-      UPDATE Activities
+      UPDATE trace.Activities
       SET ScheduledDate = @NewDate,
           Status = 'REPROGRAMADA',
           UpdatedAt = SYSDATETIME()
